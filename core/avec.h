@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <iostream>
 
+// 生配列で vector を真似たやつ
+// N: max size?
 template <typename T, int N>
 class avec
 {

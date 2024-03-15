@@ -19,15 +19,15 @@ enum Type
 struct Node
 {
     Field field;
-    i32 tear = 0;
-    i32 waste = 0;
+    i32 tear = 0; // ちぎった段数
+    i32 waste = 0; // 起こった連鎖数
 };
 
 struct Candidate
 {
     Move::Placement placement;
     Eval::Result eval = Eval::Result();
-    i32 eval_fast = INT32_MIN;
+    i32 eval_fast = INT32_MIN; // 次ツモを置いた時点での評価点（ネクスト以降は未考慮）
 };
 
 struct Result

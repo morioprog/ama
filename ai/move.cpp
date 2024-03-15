@@ -3,6 +3,9 @@
 namespace Move
 {
 
+// field でどこにぷよが置けるかを返す
+// pair_equal: ゾロか否か
+// 22 = ぷよが置ける場所の最大通り数
 avec<Placement, 22> generate(Field& field, bool pair_equal)
 {
     avec<Placement, 22> result = avec<Placement, 22>();
@@ -10,6 +13,7 @@ avec<Placement, 22> generate(Field& field, bool pair_equal)
     u8 heights[6];
     field.get_heights(heights);
 
+    // 窒息
     if (heights[2] > 11) {
         return result;
     }
@@ -26,6 +30,7 @@ avec<Placement, 22> generate(Field& field, bool pair_equal)
         }
     }
 
+    // 同色のツモなら逆方向は試す必要なし
     if (pair_equal) {
         return result;
     }

@@ -17,6 +17,7 @@ Result evaluate(Field& field, i32 tear, i32 waste, Weight& w)
 
     i32 q_max = 0;
 
+    // 発火できる連鎖の評価（連鎖尾伸ばしが可能だった場合、その連鎖も評価）
     i32 qscore = INT32_MIN;
     Quiet::search(field, MAX_DEPTH, MAX_DROP, [&] (Quiet::Result q) {
         i32 score = 0;
