@@ -36,6 +36,7 @@ void load(std::string id, SaveData& s)
     from_json(js, s);
 };
 
+// 値が範囲外に行かないようにするやつ
 Eval::Weight constrain(Eval::Weight w)
 {
     #define CONSTRAIN_POSITIVE(p) w.p = std::max(0, w.p);
@@ -54,6 +55,9 @@ Eval::Weight constrain(Eval::Weight w)
     return w;
 };
 
+// SPSA の次の候補を出すやつ
+// w: 現在の重み
+// idx: どの値を動かすかを指定したかったらここに渡す
 std::pair<Eval::Weight, Eval::Weight> randomize(Eval::Weight w, std::optional<i32> idx = {})
 {
     auto w1 = w;
@@ -63,6 +67,7 @@ std::pair<Eval::Weight, Eval::Weight> randomize(Eval::Weight w, std::optional<i3
 
     i32 rng = idx.value_or(rand() % PARAM_COUNT);
 
+    // チューニングしたいフィールドに対するポインタ
     i32* param_ptr[] = {
         &w.y,
         &w.key,
@@ -79,14 +84,18 @@ std::pair<Eval::Weight, Eval::Weight> randomize(Eval::Weight w, std::optional<i3
     auto param = param_ptr[rng];
     auto param_pre = *param;
 
+    // `need` だけ 10 未満にしてる
     auto delta = 20;
     if (rng == 3) delta = 10;
 
+    // 値は最低2動かす
     auto value = 2 + (rand() % delta);
 
+    // w1: 正方向に動かしたもの
     *param += value;
     w1 = constrain(w);
 
+    // w2: 負方向に動かしたもの
     *param = param_pre;
     *param -= value;
     w2 = constrain(w);
@@ -108,6 +117,7 @@ i32 match(Eval::Weight w, Eval::Weight w1, Eval::Weight w2, i32 result[9])
     std::atomic<i32> score1 = 0;
     std::atomic<i32> score2 = 0;
 
+    // ツモ？
     std::vector<Cell::Pair> queues[100];
     for (i32 i = 0; i < 100; ++i) {
         queues[i] = Cell::create_queue(rand() & 0xFFFF);
@@ -117,6 +127,7 @@ i32 match(Eval::Weight w, Eval::Weight w1, Eval::Weight w2, i32 result[9])
 
     std::atomic<i32> progress = 0;
 
+    // 4スレッドでとこぷよを回しまくってるっぽい
     for (i32 t = 0; t < 4; ++t) {
         threads.emplace_back([&] (i32 tid) {
             for (i32 i = 0; i < 25; ++i) {
@@ -190,6 +201,10 @@ i32 match(Eval::Weight w, Eval::Weight w1, Eval::Weight w2, i32 result[9])
     result[7] = frame2.load();
     result[8] = score2.load();
 
+    // 0: w
+    // 1: w1
+    // -1: w2
+
     if (s < s1 || s < s2) {
         if (s1 < s2) {
             return -1;
@@ -227,6 +242,7 @@ static void run(Eval::Weight w)
     {
         auto randw = Tuner::randomize(w, pidx);
 
+        // 各パラメータを順繰り更新していく
         pidx += 1;
         pidx = pidx % PARAM_COUNT;
 
@@ -256,6 +272,7 @@ static void run(Eval::Weight w)
         else {
             unchange += 1;
 
+            // 全パラメータが更新されなくなったらおわり（到達することあるのかな...？）
             if (unchange >= PARAM_COUNT) {
                 break;
             }
@@ -271,12 +288,14 @@ static void run(Eval::Weight w)
             continue;
         }
 
+        // 以下の処理は、重みが更新された場合のみ（w -> w1 or w2）
+
         auto save_data = SaveData{
-            .w = w,
-            .count = 0,
-            .frame = 0,
-            .score = 0,
-            .unchange = 0,
+            .w = w, // 重み
+            .count = 0, // 80000点以上が何回打てたか
+            .frame = 0, // フレーム数の平均（打てた場合のみ）
+            .score = 0, // 点数の平均（打てた場合のみ）
+            .unchange = 0, // 連続何回更新されていないか
         };
 
         if (m == 1) {

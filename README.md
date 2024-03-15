@@ -1,3 +1,9 @@
+# Ama ソースコード読み
+
+- `tuner/`: SPSA でのパラメータチューニング
+
+---
+
 # Ama
 A strong Puyo Puyo AI.
 

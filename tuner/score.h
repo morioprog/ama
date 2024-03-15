@@ -11,6 +11,7 @@ static std::pair<i32, i32> simulate(Eval::Weight w, std::vector<Cell::Pair> queu
 
     i32 i_offset = 0;
 
+    // 54 ツモ
     for (int i = 0; i < 54; ++i)
     {
         // if (field.is_empty()) {
@@ -26,6 +27,7 @@ static std::pair<i32, i32> simulate(Eval::Weight w, std::vector<Cell::Pair> queu
         tqueue.push_back(queue[(i + i_offset + 1) % queue.size()]);
         tqueue.push_back(queue[(i + i_offset + 2) % queue.size()]);
 
+        // tqueue: [次操作するやつ、ネク、ネクネク]
         auto airesult = AI::think_1p(field, tqueue, w, false);
 
         frame += field.get_drop_pair_frame(airesult.placement.x, airesult.placement.r);
@@ -35,10 +37,12 @@ static std::pair<i32, i32> simulate(Eval::Weight w, std::vector<Cell::Pair> queu
         auto mask = field.pop();
         auto chain = Chain::get_score(mask);
 
+        // 窒息
         if (field.get_height(2) > 11) {
             return { 0, 0 };
         }
 
+        // 何かしら打ったら更新する
         if (chain.score > 0) {
             score = std::max(score, chain.score);
 
